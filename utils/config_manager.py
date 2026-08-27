@@ -4,6 +4,8 @@ import sys
 from pathlib import Path
 from typing import Final
 
+from app.constants import CONFIG_KEY_TARGET_LISTS, CONFIG_SECTION_KEEP
+
 def get_config_path() -> Path:
     # 実行ファイルのディレクトリを取得
     if getattr(sys, 'frozen', False):
@@ -67,3 +69,11 @@ def get_config_value(
         return value
     except (configparser.NoSectionError, configparser.NoOptionError):
         return fallback
+
+
+def get_target_list_names(config: configparser.ConfigParser) -> list[str]:
+    """取り込み対象のKeepリスト名を取得する。空欄の場合は空リスト（=全件対象）を返す。"""
+    raw_value = config.get(
+        CONFIG_SECTION_KEEP, CONFIG_KEY_TARGET_LISTS, fallback=''
+    )
+    return [name.strip() for name in raw_value.split(',') if name.strip()]

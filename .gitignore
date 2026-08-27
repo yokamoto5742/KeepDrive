@@ -2,8 +2,13 @@ build/
 dist/
 logs/
 .idea/
+__pycache__/
 
 .env
 .coverage
 *.spec
 *.iml
+
+credentials.json
+token.json
+.gkeep_token
