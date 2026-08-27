@@ -9,7 +9,7 @@ import sys
 
 import gpsoauth
 
-ANDROID_ID = '0123456789abcdef'
+from app.constants import KEEP_DEVICE_ID
 
 INSTRUCTIONS = """\
 === Google Keep マスタートークン取得 ===
@@ -33,7 +33,7 @@ def main() -> int:
         print('メールアドレスとoauth_tokenの両方を入力してください')
         return 1
 
-    response = gpsoauth.exchange_token(email, oauth_token, ANDROID_ID)
+    response = gpsoauth.exchange_token(email, oauth_token, KEEP_DEVICE_ID)
     master_token = response.get('Token')
 
     if not master_token:

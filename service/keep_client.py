@@ -8,6 +8,7 @@ from gkeepapi.node import List as KeepList
 from app.constants import (
     ENV_KEEP_EMAIL,
     ENV_KEEP_MASTER_TOKEN,
+    KEEP_DEVICE_ID,
     MSG_ENV_KEY_MISSING,
     MSG_KEEP_AUTH_SUCCESS,
     MSG_KEEP_STATE_LOAD_FAILED,
@@ -24,7 +25,9 @@ def authenticate_keep() -> gkeepapi.Keep:
     master_token = _require_env(ENV_KEEP_MASTER_TOKEN)
 
     keep = gkeepapi.Keep()
-    keep.authenticate(email, master_token, state=_load_state())
+    keep.authenticate(
+        email, master_token, state=_load_state(), device_id=KEEP_DEVICE_ID
+    )
     logger.info(MSG_KEEP_AUTH_SUCCESS.format(email=email))
     return keep
 

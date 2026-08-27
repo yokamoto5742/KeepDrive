@@ -4,6 +4,9 @@ from typing import Final
 ENV_KEEP_EMAIL: Final[str] = 'KEEP_EMAIL'
 ENV_KEEP_MASTER_TOKEN: Final[str] = 'KEEP_MASTER_TOKEN'
 
+# マスタートークン取得時と認証時で同一のデバイスIDを使う必要がある
+KEEP_DEVICE_ID: Final[str] = '0123456789abcdef'
+
 # 設定ファイル
 CONFIG_SECTION_KEEP: Final[str] = 'KEEP'
 CONFIG_KEY_TARGET_LISTS: Final[str] = 'target_lists'

@@ -23,7 +23,7 @@ uv sync
 `gkeepapi` はアプリパスワードでログインできないため、マスタートークンが必要です。
 
 ```bash
-.venv\Scripts\python.exe scripts\get_keep_token.py
+.venv\Scripts\python.exe -m scripts.get_keep_token
 ```
 
 画面の案内に従って以下を行います。

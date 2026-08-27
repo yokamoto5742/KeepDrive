@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-08-27
+
 ### 追加
 - Google Keep のリストメモを Google ドライブの同名ドキュメントへ追記し、元のメモを空にする本体処理を実装
 - `utils/config.ini` の `[KEEP] target_lists` で取り込むリスト名を指定する機能を追加（空欄時は全リストが対象）
@@ -19,5 +21,5 @@
 - `pyproject.toml` に実行時依存パッケージを追加（`gkeepapi`、`google-api-python-client`、`gpsoauth`、`python-dotenv` ほか）
 - `.gitignore` に `credentials.json` / `token.json` / `.gkeep_token` を追加
 
-## [1.0.0] - 2026-08-27
-- 初版リリース
+## [0.0.1] - 2026-08-27
+- リポジトリの初期設定
