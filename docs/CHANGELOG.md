@@ -15,7 +15,14 @@
 - `utils/config_manager.py` に `get_target_memo_titles` を追加
 
 ### 変更
+- `main.py` の `run()` を Keep メモの Google ドキュメント結合処理に置き換え（gkeepapi ベースの同期処理から全面的に移行）
 - `pyproject.toml` に `playwright` を追加
+
+### 削除
+- gkeepapi によるKeep操作を全面的に廃止。`service/keep_client.py` / `service/sync_service.py` / `scripts/get_keep_token.py` / `utils/env_loader.py` と対応するテストを削除
+- 依存パッケージから `gkeepapi` / `gpsoauth` / `python-dotenv` を削除（`.env` のマスタートークンは不要になった）
+- `utils/config.ini` の `[KEEP] target_lists` と `utils/config_manager.get_target_list_names` を削除
+- 未使用になった `service/drive_client.py` の `find_or_create_folder` / `find_or_create_document`、`app/paths.py` の `KEEP_STATE_PATH`、`app/constants.py` の Keep 認証・同期関連定数を削除
 
 ## [1.0.0] - 2026-08-27
 
