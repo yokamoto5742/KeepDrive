@@ -14,12 +14,15 @@
 - `service/chrome_session.py` を追加。起動済みローカル Chrome へ CDP（`http://localhost:9222`）で接続し、ログイン済みプロファイルのまま Keep とドキュメントを1つのページで操作する
 - `utils/config_manager.py` に `get_merge_targets` と `CaseSensitiveConfigParser` を追加。`[KEEP]` セクションの「メモタイトル = 結合先ドキュメントURL」を大文字小文字そのままで読み取る
 - 追記後にエクスポートを再取得して保存反映を確認する処理を追加。確認できるまでコピーをゴミ箱へ移動しない
+- `service/chrome_session.py` に Chrome の自動起動を追加。CDP 接続に失敗した場合はリモートデバッグ有効の Chrome を起動し、接続できるまでポーリングする（`ConnectionError: connect ECONNREFUSED ::1:9222` の対策）
 
 ### 変更
 - `main.py` の `run()` を Keep メモの Google ドキュメント結合処理に置き換え（gkeepapi ベースの同期処理から全面的に移行）
 - Drive / Docs API（OAuth）による操作を全廃し、ログイン済みローカル Chrome のブラウザ操作（RPA）に置き換え。Google の審査未完了アプリで発生する `エラー 403: access_denied` を回避する
 - 結合先ドキュメントの特定方法を Drive 検索から設定ファイルの URL 指定へ変更。`utils/config.ini` の `[KEEP]` は「メモタイトル = 結合先ドキュメントURL」形式になった
 - `pyproject.toml` に `playwright` を追加
+- CDP 接続先を `http://localhost:9222` から `http://127.0.0.1:9222` へ変更。`localhost` が IPv6（`::1`）に解決されると、IPv4 のみで待ち受ける Chrome に接続できないため
+- Chrome の自動起動は専用プロファイル `%LocalAppData%\KeepDrive\ChromeProfile` を使う。Chrome 136 以降はデフォルトプロファイルだと `--remote-debugging-port` が無視されるため（このプロファイルは初回のみ手動で Google ログインが必要）
 
 ### 削除
 - gkeepapi によるKeep操作を全面的に廃止。`service/keep_client.py` / `service/sync_service.py` / `scripts/get_keep_token.py` / `utils/env_loader.py` と対応するテストを削除

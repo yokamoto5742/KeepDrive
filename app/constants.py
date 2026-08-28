@@ -4,9 +4,28 @@ from typing import Final
 CONFIG_SECTION_KEEP: Final[str] = 'KEEP'
 
 # ブラウザ操作（Playwright）
-CHROME_CDP_URL: Final[str] = 'http://localhost:9222'
+# localhostはIPv6（::1）に解決されることがあり、IPv4のみで待ち受けるChromeに繋がらない
+CHROME_CDP_URL: Final[str] = 'http://127.0.0.1:9222'
 BROWSER_TIMEOUT_MS: Final[int] = 30000
 DIALOG_TIMEOUT_MS: Final[int] = 5000
+
+# Chrome未起動時の自動起動設定
+CHROME_EXECUTABLE_PATHS: Final[tuple[str, ...]] = (
+    r'%ProgramFiles%\Google\Chrome\Application\chrome.exe',
+    r'%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe',
+    r'%LocalAppData%\Google\Chrome\Application\chrome.exe',
+)
+# Chrome 136以降はデフォルトプロファイルだと--remote-debugging-portが無視されるため、
+# 専用のユーザーデータディレクトリで起動する（初回のみGoogleへのログインが必要）
+CHROME_USER_DATA_DIR: Final[str] = r'%LocalAppData%\KeepDrive\ChromeProfile'
+CHROME_LAUNCH_ARGS: Final[tuple[str, ...]] = (
+    '--remote-debugging-port=9222',
+    '--user-data-dir={user_data_dir}',
+    '--no-first-run',
+    '--no-default-browser-check',
+)
+CHROME_LAUNCH_POLL_INTERVAL_SECONDS: Final[float] = 1.0
+CHROME_LAUNCH_MAX_ATTEMPTS: Final[int] = 15
 
 # Google Keep のDOM依存値
 KEEP_SEARCH_URL: Final[str] = 'https://keep.google.com/#search/text={query}'
@@ -32,7 +51,14 @@ DOCS_SAVE_POLL_MAX_ATTEMPTS: Final[int] = 10
 MSG_CHROME_CONNECTED: Final[str] = 'ローカルのChromeに接続しました: {url}'
 MSG_CHROME_CONNECT_FAILED: Final[str] = (
     'Chromeに接続できません（{url}）。'
-    'Chromeを --remote-debugging-port オプション付きで起動してください: {error}'
+    'リモートデバッグなしのChromeが起動中の場合は、'
+    'Chromeをすべて終了してから再実行してください: {error}'
+)
+MSG_CHROME_LAUNCHING: Final[str] = (
+    'Chromeに接続できないため、リモートデバッグを有効にして起動します: {path}'
+)
+MSG_CHROME_NOT_FOUND: Final[str] = (
+    'Chromeの実行ファイルが見つかりません。確認した場所: {paths}'
 )
 
 # Keep操作メッセージ
