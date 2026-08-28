@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-08-28
+
 ### 追加
 - `service/keep_doc_merge.py` を追加。`utils/config.ini` の `[KEEP]` で指定したメモを Playwright で「Google ドキュメントにコピー」し、結合先ドキュメントの末尾へ追記したうえでコピーをゴミ箱へ移動する
 - `service/keep_browser.py` を追加。Keep を操作し、コピー完了通知の「開く」から新しいタブを開いてコピー先ドキュメントの URL を取得する
