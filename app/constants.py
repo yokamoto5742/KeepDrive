@@ -21,19 +21,26 @@ CHROME_USER_DATA_DIR: Final[str] = r'%LocalAppData%\KeepDrive\ChromeProfile'
 CHROME_LAUNCH_ARGS: Final[tuple[str, ...]] = (
     '--remote-debugging-port=9222',
     '--user-data-dir={user_data_dir}',
+    '--headless=new',
+    # ヘッドレスの既定ウィンドウは狭く、Keepのカード配置が崩れるため明示する
+    '--window-size=1920,1080',
     '--no-first-run',
     '--no-default-browser-check',
 )
 CHROME_LAUNCH_POLL_INTERVAL_SECONDS: Final[float] = 1.0
 CHROME_LAUNCH_MAX_ATTEMPTS: Final[int] = 15
+CHROME_CLOSE_TIMEOUT_SECONDS: Final[float] = 5.0
 
 # Google Keep のDOM依存値
 KEEP_SEARCH_URL: Final[str] = 'https://keep.google.com/#search/text={query}'
 # メモカードはrole="listitem"を持たないため、フォーカス可能なカード要素で特定する
 KEEP_NOTE_CARD_SELECTOR: Final[str] = 'div[tabindex="0"]'
+KEEP_LOGIN_URL_PREFIX: Final[str] = 'https://accounts.google.com'
 KEEP_MORE_MENU_LABEL: Final[str] = 'その他'
 KEEP_COPY_TO_DOCS_LABEL: Final[str] = 'Google ドキュメントにコピー'
 KEEP_OPEN_COPIED_DOC_LABEL: Final[str] = '開く'
+KEEP_NOTE_BODY_LABEL: Final[str] = 'メモ'
+KEEP_CLOSE_NOTE_LABEL: Final[str] = '閉じる'
 
 # Google ドキュメントのDOM依存値
 DOCS_URL_PATTERN: Final[str] = r'/document/d/([\w-]+)'
@@ -62,6 +69,8 @@ MSG_CHROME_LAUNCHING: Final[str] = (
 MSG_CHROME_NOT_FOUND: Final[str] = (
     'Chromeの実行ファイルが見つかりません。確認した場所: {paths}'
 )
+MSG_CHROME_CLOSED: Final[str] = '起動したChromeを終了しました'
+MSG_CHROME_CLOSE_FAILED: Final[str] = 'Chromeの終了に失敗しました: {error}'
 
 # Keep操作メッセージ
 MSG_MEMO_NOT_FOUND: Final[str] = 'Keepに指定タイトルのメモが見つかりません: {title}'
@@ -69,6 +78,15 @@ MSG_MEMO_COPIED: Final[str] = 'メモ「{title}」をGoogleドキュメントに
 MSG_COPIED_DOC_NOT_OPENED: Final[str] = (
     'コピー完了通知の「{label}」を押せず、コピー先ドキュメントを特定できません: {title}'
 )
+MSG_KEEP_LOGIN_REQUIRED: Final[str] = (
+    'Keepを開けずログイン画面へ遷移しました。'
+    'app/constants.pyのCHROME_LAUNCH_ARGSから--headless=newを一時的に外して起動し、'
+    '専用プロファイルでGoogleにログインし直してください'
+)
+MSG_MEMO_BODY_CLEARED: Final[str] = (
+    'メモ「{title}」の本文を削除しました（タイトルは残しています）'
+)
+MSG_MEMO_BODY_NOT_CLEARED: Final[str] = 'メモ「{title}」の本文を削除できませんでした'
 
 # ドキュメント操作メッセージ
 MSG_INVALID_DOCUMENT_URL: Final[str] = (
@@ -89,6 +107,12 @@ MSG_NO_TARGET_MEMO: Final[str] = (
 )
 MSG_MEMO_START: Final[str] = 'メモ「{title}」の処理を開始します'
 MSG_MERGE_SUCCESS: Final[str] = '既存ドキュメント「{title}」に内容を結合しました'
+MSG_DUPLICATE_LINES_SKIPPED: Final[str] = (
+    'メモ「{title}」の重複行{count}件を追記対象から除外しました'
+)
+MSG_NO_NEW_CONTENT: Final[str] = (
+    'メモ「{title}」の内容はすべて既存ドキュメントと重複するため追記しません'
+)
 MSG_COPIED_DOC_TRASHED: Final[str] = (
     'コピーしたドキュメントをゴミ箱へ移動しました: {title}'
 )

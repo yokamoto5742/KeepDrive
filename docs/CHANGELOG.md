@@ -7,6 +7,17 @@
 
 ## [Unreleased]
 
+### 追加
+- 追記前に重複行を除外する処理を `service/keep_doc_merge.py` に追加。コピーしたメモの各行のうち、結合先ドキュメントに完全一致の行が既にあるものと、コピー内で重複する行を追記対象から外す（空行は段落の区切りとして残す）。除外の結果、追記する内容が空になった場合は追記せずコピーの削除とメモ本文の削除だけを行う
+- `service/keep_browser.py` に `clear_note_body` を追加。結合が完了したメモを開いて本文だけを削除する（次回の登録に備えてタイトルは残す）
+- `service/keep_browser.py` に Keep がログイン画面へ遷移した場合の判定を追加。ヘッドレスではログインできないため、ヘッドレスを外して起動し直す案内を出す
+- `service/chrome_session.py` に自動起動した Chrome の終了処理を追加。CDP の `Browser.close` を送ったあとプロセスの終了を待ち、残っていれば強制終了する（手動起動の Chrome に接続した場合は切断のみで終了しない）
+
+### 変更
+- 自動起動する Chrome をヘッドレス（`--headless=new`）にした。ヘッドレスの既定ウィンドウでは Keep のカード配置が崩れるため `--window-size=1920,1080` も指定する
+- `service/chrome_session.py` の `connect_chrome` が `(Browser, Popen | None)` を返すようになった。自分で起動した Chrome だけを終了するための判定に使う
+- `service/keep_browser.py` のメモカード検索を `_find_note_card` に切り出し、コピー処理と本文削除処理で共有する
+
 ## [1.1.0] - 2026-08-28
 
 ### 追加

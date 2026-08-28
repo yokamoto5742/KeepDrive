@@ -1,10 +1,16 @@
+import subprocess
 from unittest.mock import MagicMock
 
 import pytest
 from playwright.sync_api import Error as PlaywrightError
 
 from app.constants import CHROME_CDP_URL
-from service.chrome_session import connect_chrome, find_chrome_executable, launch_chrome
+from service.chrome_session import (
+    _close_session,
+    connect_chrome,
+    find_chrome_executable,
+    launch_chrome,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -25,7 +31,7 @@ def test_connect_chrome_uses_running_chrome(monkeypatch: pytest.MonkeyPatch) -> 
     browser = MagicMock()
     playwright = build_playwright(browser)
 
-    assert connect_chrome(playwright) is browser
+    assert connect_chrome(playwright) == (browser, None)
     playwright.chromium.connect_over_cdp.assert_called_once_with(CHROME_CDP_URL)
     launched.assert_not_called()
 
@@ -38,7 +44,7 @@ def test_connect_chrome_launches_and_retries(monkeypatch: pytest.MonkeyPatch) ->
         PlaywrightError('ECONNREFUSED'), PlaywrightError('ECONNREFUSED'), browser
     )
 
-    assert connect_chrome(playwright) is browser
+    assert connect_chrome(playwright) == (browser, launched.return_value)
     launched.assert_called_once_with()
 
 
@@ -96,3 +102,44 @@ def test_launch_chrome_passes_remote_debugging_args(
     # デフォルトプロファイルでは--remote-debugging-portが無視されるため専用ディレクトリを渡す
     user_data_dir_arg = next(a for a in args if a.startswith('--user-data-dir='))
     assert '%' not in user_data_dir_arg
+
+
+def test_launch_chrome_runs_headless(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        'service.chrome_session.find_chrome_executable', lambda: r'C:\chrome.exe'
+    )
+    popen = MagicMock()
+    monkeypatch.setattr('service.chrome_session.subprocess.Popen', popen)
+
+    assert launch_chrome() is popen.return_value
+    assert '--headless=new' in popen.call_args.args[0]
+
+
+def test_close_session_terminates_launched_chrome() -> None:
+    page, browser, process = MagicMock(), MagicMock(), MagicMock()
+
+    _close_session(page, browser, process)
+
+    cdp_session = page.context.new_cdp_session.return_value
+    cdp_session.send.assert_called_once_with('Browser.close')
+    browser.close.assert_called_once()
+    process.wait.assert_called_once()
+
+
+def test_close_session_kills_chrome_when_it_does_not_exit() -> None:
+    page, browser, process = MagicMock(), MagicMock(), MagicMock()
+    process.wait.side_effect = subprocess.TimeoutExpired(cmd='chrome', timeout=5)
+
+    _close_session(page, browser, process)
+
+    process.kill.assert_called_once()
+
+
+def test_close_session_keeps_manually_started_chrome_running() -> None:
+    page, browser = MagicMock(), MagicMock()
+
+    _close_session(page, browser, None)
+
+    page.close.assert_called_once()
+    browser.close.assert_called_once()
+    page.context.new_cdp_session.assert_not_called()

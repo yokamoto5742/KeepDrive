@@ -4,19 +4,25 @@ import pytest
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
 from app.constants import (
+    KEEP_CLOSE_NOTE_LABEL,
     KEEP_COPY_TO_DOCS_LABEL,
+    KEEP_LOGIN_URL_PREFIX,
     KEEP_MORE_MENU_LABEL,
+    KEEP_NOTE_BODY_LABEL,
     KEEP_NOTE_CARD_SELECTOR,
     KEEP_OPEN_COPIED_DOC_LABEL,
 )
-from service.keep_browser import copy_note_to_google_docs
+from service.keep_browser import clear_note_body, copy_note_to_google_docs
 
 COPIED_URL = 'https://docs.google.com/document/d/copied-1/edit'
+KEEP_URL = 'https://keep.google.com/#search/text=memo'
 
 
 def build_page(copied_url: str = COPIED_URL) -> MagicMock:
     page = MagicMock()
+    page.url = KEEP_URL
     page.locator.return_value.filter.return_value.first = MagicMock()
+    page.get_by_role.return_value.inner_text.return_value = ''
     copied_page = MagicMock()
     copied_page.url = copied_url
     page.context.expect_page.return_value.__enter__.return_value.value = copied_page
@@ -88,3 +94,51 @@ def test_copy_note_raises_lookup_error_when_copied_document_does_not_open() -> N
 
     with pytest.raises(LookupError):
         copy_note_to_google_docs(page, '人間関係')
+
+
+def test_copy_note_raises_connection_error_when_redirected_to_login() -> None:
+    page = build_page()
+    page.url = f'{KEEP_LOGIN_URL_PREFIX}/ServiceLogin'
+
+    with pytest.raises(ConnectionError):
+        copy_note_to_google_docs(page, '人間関係')
+
+
+def test_clear_note_body_selects_and_deletes_only_the_body() -> None:
+    page = build_page()
+
+    clear_note_body(page, '人間関係')
+
+    get_card(page).click.assert_called_once()
+    assert page.get_by_role.call_args_list[0].kwargs['name'] == KEEP_NOTE_BODY_LABEL
+    page.get_by_role.return_value.click.assert_called()
+    assert [call.args[0] for call in page.keyboard.press.call_args_list] == [
+        'Control+A',
+        'Delete',
+    ]
+
+
+def test_clear_note_body_closes_the_note_after_deleting() -> None:
+    page = build_page()
+
+    clear_note_body(page, '人間関係')
+
+    assert page.get_by_role.call_args_list[-1].kwargs['name'] == KEEP_CLOSE_NOTE_LABEL
+
+
+def test_clear_note_body_raises_when_body_still_has_text() -> None:
+    page = build_page()
+    page.get_by_role.return_value.inner_text.return_value = '残った本文'
+
+    with pytest.raises(RuntimeError):
+        clear_note_body(page, '人間関係')
+
+
+def test_clear_note_body_raises_lookup_error_when_memo_is_missing() -> None:
+    page = build_page()
+    get_card(page).wait_for.side_effect = PlaywrightTimeoutError('timeout')
+
+    with pytest.raises(LookupError):
+        clear_note_body(page, '存在しないメモ')
+
+    get_card(page).click.assert_not_called()
