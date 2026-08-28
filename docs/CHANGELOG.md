@@ -7,6 +7,16 @@
 
 ## [Unreleased]
 
+### 追加
+- `service/keep_doc_merge.py` を追加。`utils/config.ini` の `[KEEP] target_memo`（カンマ区切り）で指定したタイトルの Keep メモを Playwright で「Google ドキュメントにコピー」し、同名の既存ドキュメント末尾へ結合したうえでコピーをゴミ箱へ移動する
+- `service/keep_browser.py` を追加。起動済みローカル Chrome へ CDP（`http://localhost:9222`）で接続し、ログイン済みプロファイルのまま Keep を操作する
+- `service/drive_client.py` に `find_document_ids_by_name` / `trash_file` を追加
+- `service/docs_client.py` に `extract_text` を追加
+- `utils/config_manager.py` に `get_target_memo_titles` を追加
+
+### 変更
+- `pyproject.toml` に `playwright` を追加
+
 ## [1.0.0] - 2026-08-27
 
 ### 追加

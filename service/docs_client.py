@@ -21,6 +21,20 @@ def append_text(docs: Any, document_id: str, text: str) -> None:
     ).execute()
 
 
+def extract_text(docs: Any, document_id: str) -> str:
+    """ドキュメント本文を段落単位のプレーンテキストとして取り出す。"""
+    document = docs.documents().get(
+        documentId=document_id, fields='body.content'
+    ).execute()
+
+    return ''.join(
+        run['textRun']['content']
+        for element in document['body']['content']
+        for run in element.get('paragraph', {}).get('elements', [])
+        if 'textRun' in run
+    )
+
+
 def _fetch_body_end_index(docs: Any, document_id: str) -> int:
     document = docs.documents().get(
         documentId=document_id, fields='body.content'

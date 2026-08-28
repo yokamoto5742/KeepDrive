@@ -4,7 +4,11 @@ import sys
 from pathlib import Path
 from typing import Final
 
-from app.constants import CONFIG_KEY_TARGET_LISTS, CONFIG_SECTION_KEEP
+from app.constants import (
+    CONFIG_KEY_TARGET_LISTS,
+    CONFIG_KEY_TARGET_MEMO,
+    CONFIG_SECTION_KEEP,
+)
 
 def get_config_path() -> Path:
     # 実行ファイルのディレクトリを取得
@@ -73,7 +77,17 @@ def get_config_value(
 
 def get_target_list_names(config: configparser.ConfigParser) -> list[str]:
     """取り込み対象のKeepリスト名を取得する。空欄の場合は空リスト（=全件対象）を返す。"""
-    raw_value = config.get(
-        CONFIG_SECTION_KEEP, CONFIG_KEY_TARGET_LISTS, fallback=''
+    return _split_comma_separated(
+        config.get(CONFIG_SECTION_KEEP, CONFIG_KEY_TARGET_LISTS, fallback='')
     )
+
+
+def get_target_memo_titles(config: configparser.ConfigParser) -> list[str]:
+    """Googleドキュメントへコピーする対象メモのタイトルを取得する。"""
+    return _split_comma_separated(
+        config.get(CONFIG_SECTION_KEEP, CONFIG_KEY_TARGET_MEMO, fallback='')
+    )
+
+
+def _split_comma_separated(raw_value: str) -> list[str]:
     return [name.strip() for name in raw_value.split(',') if name.strip()]
