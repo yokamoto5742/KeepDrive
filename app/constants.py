@@ -29,6 +29,8 @@ CHROME_LAUNCH_MAX_ATTEMPTS: Final[int] = 15
 
 # Google Keep のDOM依存値
 KEEP_SEARCH_URL: Final[str] = 'https://keep.google.com/#search/text={query}'
+# メモカードはrole="listitem"を持たないため、フォーカス可能なカード要素で特定する
+KEEP_NOTE_CARD_SELECTOR: Final[str] = 'div[tabindex="0"]'
 KEEP_MORE_MENU_LABEL: Final[str] = 'その他'
 KEEP_COPY_TO_DOCS_LABEL: Final[str] = 'Google ドキュメントにコピー'
 KEEP_OPEN_COPIED_DOC_LABEL: Final[str] = '開く'

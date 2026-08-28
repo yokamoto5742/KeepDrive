@@ -7,6 +7,7 @@ from app.constants import (
     DOCS_URL_GLOB,
     KEEP_COPY_TO_DOCS_LABEL,
     KEEP_MORE_MENU_LABEL,
+    KEEP_NOTE_CARD_SELECTOR,
     KEEP_OPEN_COPIED_DOC_LABEL,
     KEEP_SEARCH_URL,
     MSG_COPIED_DOC_NOT_OPENED,
@@ -21,7 +22,7 @@ def copy_note_to_google_docs(page: Page, title: str) -> str:
     """指定タイトルのメモをKeepの「Googleドキュメントにコピー」で複製し、URLを返す。"""
     page.goto(KEEP_SEARCH_URL.format(query=quote(title)))
 
-    card = page.get_by_role('listitem').filter(
+    card = page.locator(KEEP_NOTE_CARD_SELECTOR).filter(
         has=page.get_by_text(title, exact=True)
     ).first
     try:

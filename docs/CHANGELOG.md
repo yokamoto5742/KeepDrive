@@ -24,6 +24,9 @@
 - CDP 接続先を `http://localhost:9222` から `http://127.0.0.1:9222` へ変更。`localhost` が IPv6（`::1`）に解決されると、IPv4 のみで待ち受ける Chrome に接続できないため
 - Chrome の自動起動は専用プロファイル `%LocalAppData%\KeepDrive\ChromeProfile` を使う。Chrome 136 以降はデフォルトプロファイルだと `--remote-debugging-port` が無視されるため（このプロファイルは初回のみ手動で Google ログインが必要）
 
+### 修正
+- Keep のメモカードを `role="listitem"` で探していたため、メモが表示されていても「Keepに指定タイトルのメモが見つかりません」で失敗していた問題を修正。現在の Keep の DOM には `listitem` ロールが存在しないため、`KEEP_NOTE_CARD_SELECTOR`（`div[tabindex="0"]`）でカードを特定する
+
 ### 削除
 - gkeepapi によるKeep操作を全面的に廃止。`service/keep_client.py` / `service/sync_service.py` / `scripts/get_keep_token.py` / `utils/env_loader.py` と対応するテストを削除
 - OAuth 認証と API 呼び出しの `service/google_auth.py` / `service/drive_client.py` / `service/docs_client.py`、認証情報のパスのみを持つ `app/paths.py` と対応するテストを削除（`credentials.json` / `token.json` は不要になった）
