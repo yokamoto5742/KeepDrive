@@ -8,43 +8,38 @@ from app.constants import (
     MSG_MERGE_START,
     MSG_NO_TARGET_MEMO,
 )
-from service.google_auth import build_docs_service, build_drive_service, load_credentials
-from service.keep_browser import open_keep_page
+from service.chrome_session import open_chrome_page
 from service.keep_doc_merge import merge_memo
-from utils.config_manager import get_target_memo_titles, load_config
+from utils.config_manager import get_merge_targets, load_config
 from utils.log_rotation import setup_logging
 
 logger = logging.getLogger(__name__)
 
 
 def run() -> int:
-    """対象メモをGoogleドキュメントへコピーし、同名ドキュメントへ結合する。"""
+    """対象メモをGoogleドキュメントへコピーし、結合先ドキュメントへ追記する。"""
     config = load_config()
     setup_logging(config)
     logger.info(MSG_MERGE_START)
 
-    titles = get_target_memo_titles(config)
-    if not titles:
+    targets = get_merge_targets(config)
+    if not targets:
         logger.warning(MSG_NO_TARGET_MEMO)
         return 1
 
-    credentials = load_credentials()
-    drive = build_drive_service(credentials)
-    docs = build_docs_service(credentials)
-
     failure_count = 0
-    with open_keep_page() as page:
-        for title in titles:
+    with open_chrome_page() as page:
+        for title, destination_url in targets.items():
             # 1件の失敗で残りのメモを止めない
             try:
-                merge_memo(page, drive, docs, title)
+                merge_memo(page, title, destination_url)
             except Exception as e:
                 logger.error(MSG_MEMO_MERGE_FAILED.format(title=title, error=e))
                 failure_count += 1
 
     logger.info(
         MSG_MERGE_COMPLETED.format(
-            success=len(titles) - failure_count, failure=failure_count
+            success=len(targets) - failure_count, failure=failure_count
         )
     )
     return 1 if failure_count else 0

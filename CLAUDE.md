@@ -30,31 +30,32 @@ uv sync
 
 ```
 main.run()
-  ├ utils/config_manager  … utils/config.ini の読み込み（[KEEP] target_memo）
-  ├ service/google_auth   … OAuth（credentials.json → token.json）と Drive/Docs サービス生成
-  ├ service/keep_browser  … Playwright で起動済みローカル Chrome に CDP 接続し Keep を操作
-  └ service/keep_doc_merge … メモごとに keep_browser → drive_client → docs_client を呼ぶ
+  ├ utils/config_manager   … utils/config.ini の読み込み（[KEEP] メモタイトル = 結合先ドキュメントURL）
+  ├ service/chrome_session … Playwright で起動済みローカル Chrome に CDP 接続し、共有ページを提供
+  ├ service/keep_browser   … Keep を操作してメモをコピーし、コピー先ドキュメントの URL を返す
+  ├ service/docs_browser   … Google ドキュメントの本文取得・追記・ゴミ箱移動
+  └ service/keep_doc_merge … メモごとに keep_browser → docs_browser を呼ぶ
 ```
 
-- Keep の操作はブラウザ自動化で行う。ログイン済みの Chrome プロファイルをそのまま使うため、Keep 用の認証情報はコードに持たない。
+- **Google API（OAuth）は使わない。** すべてログイン済みローカル Chrome のブラウザ操作（RPA）で行う。Google の審査未完了アプリでの `エラー 403: access_denied` を回避するための設計なので、Drive/Docs API への差し戻しは提案しない。
+- ドキュメント本文の取得だけは DOM ではなく `export?format=txt` を `page.request` で取得する（ブラウザのセッションCookieをそのまま使うため認証不要）。
 - `main.run()` はメモ1件ごとに例外を握りつぶす。1件の失敗で全体を止めないための意図的な設計。
-- **結合が成功した場合のみ** コピー元ドキュメントをゴミ箱へ移動する。この順序を入れ替えるとデータ消失につながる。
+- **追記がドライブに保存されたことを確認できた場合のみ** コピーをゴミ箱へ移動する。この順序を入れ替えるとデータ消失につながる。
 - 終了コードは全件成功で `0`、1件でも失敗すれば `1`。
 
 ## 制約・落とし穴
 
 - 公式 Google Keep API（`keep.googleapis.com`）は**個人 @gmail.com アカウントでは利用できない**（`invalid_scope`、Workspace 限定）。Keep API への移行提案はしない。詳細は `docs/Google Keep API移行検証記録.md`。
 - Chrome は `--remote-debugging-port=9222` 付きで起動している必要がある。通常起動中の Chrome があるとポートを開けない。
-- `service/keep_browser.py` のセレクタは Keep の DOM（`role="listitem"` のカード、`その他` ボタン、`Google ドキュメントにコピー` メニュー）に依存する。Keep の UI 変更や表示言語の違いで壊れるため、ラベルは `app/constants.py` で調整する。
-- コピー直後のドキュメントは Drive の検索反映に数秒かかる。`_wait_for_copied_document()` がコピー前後の差分でポーリングして特定する。
-- `credentials.json` / `token.json` は Git 管理対象外かつ Claude の編集禁止。生成手順は `README.md` を参照。
+- セレクタは Keep の DOM（`role="listitem"` のカード、`その他` ボタン、`Google ドキュメントにコピー` メニュー、コピー完了通知の `開く`）と Google ドキュメントの DOM（`.kix-appview-editor`、`ファイル` / `ゴミ箱に移動` メニュー）に依存する。UI 変更や表示言語の違いで壊れるため、ラベルは `app/constants.py` で調整する。
+- 追記直後はドライブへの保存が終わっていない。`docs_browser._wait_until_saved()` がエクスポートを再取得して反映を確認する。
+- `credentials.json` / `token.json` は使用しない。Git 管理対象外かつ Claude の編集禁止。
 - `docs/Google Keep メモ自動集約アプリ.md` は gkeepapi 時代の仕様書で、現在の実装とは一致しない。
 
 ## コード規約（`.claude/rules/` の補足）
 
-- ユーザー向けメッセージ・API 定数・設定キーはすべて `app/constants.py` に `Final` で定義し、モジュール側では参照のみ行う。文字列リテラルを直書きしない。
-- Google API のサービスオブジェクトは動的生成のため `Any` で受ける（`build_drive_service` / `build_docs_service`）。
-- テストは MagicMock で Drive/Docs/Playwright を差し替える。実際の API やブラウザには接続しない。
+- ユーザー向けメッセージ・URL・セレクタ・画面ラベルはすべて `app/constants.py` に `Final` で定義し、モジュール側では参照のみ行う。文字列リテラルを直書きしない。
+- テストは MagicMock で Playwright の `Page` を差し替える。実際のブラウザには接続しない。
 
 ## Git
 

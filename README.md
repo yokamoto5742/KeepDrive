@@ -1,16 +1,16 @@
 # KeepDrive
 
-Google Keep のメモを Google ドキュメントへコピーし、Google ドライブ上の同名ドキュメントへ
-結合する Windows 向けバッチツールです。
+Google Keep のメモを Google ドキュメントへコピーし、指定した結合先ドキュメントへ
+追記する Windows 向けバッチツールです。
 
-Keep の操作はログイン済みのローカル Chrome を Playwright で自動操作して行うため、
-Keep 用の認証情報は不要です。
+Keep もドキュメントもログイン済みのローカル Chrome を Playwright で自動操作（RPA）して
+処理するため、Google API の OAuth 認証情報は一切不要です。
 
 ## 動作環境
 
 - Windows 11 / Python 3.13 以上
 - プロジェクト配下の仮想環境（`.venv`）
-- Google Chrome（Keep にログイン済み）
+- Google Chrome（Keep と Google ドキュメントにログイン済み）
 
 ## セットアップ
 
@@ -22,26 +22,22 @@ uv sync
 
 CDP で既存の Chrome に接続するため、`playwright install` は不要です。
 
-### 2. Drive / Docs API の認証情報を配置する
+### 2. 対象のメモと結合先ドキュメントを指定する
 
-1. Google Cloud コンソールで Drive API と Docs API を有効化する
-2. 「OAuth クライアント ID」を**デスクトップアプリ**として作成する
-3. ダウンロードした JSON を `credentials.json` としてプロジェクトルートに置く
-
-初回実行時のみブラウザが開いて認証を求められ、成功すると `token.json` が生成されます。
-以降は `token.json` が再利用されるため、ブラウザ認証は不要です。
-
-### 3. 対象のメモタイトルを指定する
-
-`utils/config.ini` の `[KEEP]` セクションを編集します。
+`utils/config.ini` の `[KEEP]` セクションに「メモタイトル = 結合先ドキュメントURL」を
+1行ずつ書きます。
 
 ```ini
 [KEEP]
-# 対象メモのタイトルをカンマ区切りで指定する
-target_memo = 人間関係
+# メモタイトル = 結合先ドキュメントURL
+人間関係 = https://docs.google.com/document/d/xxxxxxxxxxxxxxxxxxxxxxxxxxxx/edit
+読書メモ = https://docs.google.com/document/d/yyyyyyyyyyyyyyyyyyyyyyyyyyyy/edit
 ```
 
-### 4. Chrome をデバッグポート付きで起動する
+結合先ドキュメントの URL は、Google ドキュメントで対象のファイルを開いたときの
+アドレスバーの値をそのまま貼り付けます。
+
+### 3. Chrome をデバッグポート付きで起動する
 
 起動中の Chrome があると同じポートを開けないため、いったん終了してから実行します。
 
@@ -49,7 +45,7 @@ target_memo = 人間関係
 "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222
 ```
 
-この Chrome で Google Keep にログインした状態にしておきます。
+この Chrome で Google アカウントにログインした状態にしておきます。
 
 ## 実行
 
@@ -67,14 +63,17 @@ run.bat
 
 ## 処理内容
 
-`target_memo` に指定した各タイトルについて、以下を順に行います。
+`[KEEP]` に指定した各メモについて、以下を順に行います。
 
-1. Drive 全体から同名の Google ドキュメントを検索して控えておく
-2. Keep で該当メモを開き、「Google ドキュメントにコピー」を実行する
-3. Drive をポーリングし、新しく増えたドキュメント（＝コピー）を特定する
-4. 同名の既存ドキュメントが**ない**場合は、コピーをそのまま残して終了する
-5. ある場合は、既存ドキュメントの末尾にコピーの本文を追記する
-6. **結合が成功した場合のみ**、コピーをゴミ箱へ移動する
+1. Keep で該当メモを検索し、「Google ドキュメントにコピー」を実行する
+2. コピー完了通知の「開く」から新しいタブを開き、コピー先ドキュメントの URL を取得する
+3. コピー先ドキュメントをテキスト形式でエクスポートして本文を取得する
+4. 結合先ドキュメントを開き、末尾に本文を入力する
+5. エクスポート結果を再取得し、追記がドライブに保存されたことを確認する
+6. **保存を確認できた場合のみ**、コピーをゴミ箱へ移動する
+
+すべてログイン済みブラウザのセッションで行うため、Google Cloud のアプリ審査
+（`エラー 403: access_denied`）の影響を受けません。
 
 ## 定期実行（Windows タスクスケジューラ）
 
@@ -107,5 +106,8 @@ Chrome の起動も併せて自動化してください。
 ## 補足
 
 - Google Keep には個人アカウント（`@gmail.com`）向けの公式 API がないため、ブラウザ自動化で
-  操作しています。Keep の UI 変更で動作しなくなる可能性があります。
-- `credentials.json` / `token.json` は Git 管理対象外です。
+  操作しています。Keep や Google ドキュメントの UI 変更で動作しなくなる可能性があります。
+- 画面上のラベル（`その他` / `Google ドキュメントにコピー` / `開く` / `ファイル` /
+  `ゴミ箱に移動`）は `app/constants.py` にまとめてあります。表示言語や UI が変わった場合は
+  ここを調整します。
+- `credentials.json` / `token.json` は使用しません（削除して問題ありません）。

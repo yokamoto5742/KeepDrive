@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 from typing import Final
 
-from app.constants import CONFIG_KEY_TARGET_MEMO, CONFIG_SECTION_KEEP
+from app.constants import CONFIG_SECTION_KEEP
 
 def get_config_path() -> Path:
     # 実行ファイルのディレクトリを取得
@@ -16,10 +16,18 @@ def get_config_path() -> Path:
 
 CONFIG_PATH: Final[Path] = get_config_path()
 
+
+class CaseSensitiveConfigParser(configparser.ConfigParser):
+    """メモタイトルをキーに使うため、キーの大文字小文字をそのまま保持する。"""
+
+    def optionxform(self, optionstr: str) -> str:
+        return optionstr
+
+
 class ConfigManager:
     def __init__(self, config_file: Path | str = CONFIG_PATH) -> None:
         self.config_file: Path = Path(config_file)
-        self.config: configparser.ConfigParser = configparser.ConfigParser()
+        self.config: configparser.ConfigParser = CaseSensitiveConfigParser()
         self.load_config()
 
     def load_config(self) -> None:
@@ -71,12 +79,13 @@ def get_config_value(
         return fallback
 
 
-def get_target_memo_titles(config: configparser.ConfigParser) -> list[str]:
-    """Googleドキュメントへコピーする対象メモのタイトルを取得する。"""
-    return _split_comma_separated(
-        config.get(CONFIG_SECTION_KEEP, CONFIG_KEY_TARGET_MEMO, fallback='')
-    )
+def get_merge_targets(config: configparser.ConfigParser) -> dict[str, str]:
+    """メモタイトルと結合先ドキュメントURLの対応を取得する。"""
+    if not config.has_section(CONFIG_SECTION_KEEP):
+        return {}
 
-
-def _split_comma_separated(raw_value: str) -> list[str]:
-    return [name.strip() for name in raw_value.split(',') if name.strip()]
+    return {
+        title: url.strip()
+        for title, url in config.items(CONFIG_SECTION_KEEP)
+        if url.strip()
+    }
