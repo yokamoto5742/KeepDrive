@@ -14,7 +14,11 @@ from app.constants import (
     KEEP_NOTE_CARD_SELECTOR,
     KEEP_OPEN_COPIED_DOC_LABEL,
 )
-from service.keep_browser import clear_note_body, copy_note_to_google_docs
+from service.keep_browser import (
+    clear_note_body,
+    copy_note_to_google_docs,
+    read_note_body,
+)
 
 COPIED_URL = 'https://docs.google.com/document/d/copied-1/edit'
 KEEP_URL = 'https://keep.google.com/#search/text=memo'
@@ -108,6 +112,23 @@ def test_copy_note_raises_connection_error_when_redirected_to_login() -> None:
 
     with pytest.raises(ConnectionError):
         copy_note_to_google_docs(page, '人間関係')
+
+
+def test_read_note_body_returns_the_body_text() -> None:
+    page = build_page()
+    get_body(page).inner_text.return_value = '本文'
+
+    assert read_note_body(page, '人間関係') == '本文'
+    assert page.locator.call_args_list[-1].args[0] == KEEP_NOTE_BODY_SELECTOR
+
+
+def test_read_note_body_closes_the_note_without_editing_it() -> None:
+    page = build_page()
+
+    read_note_body(page, '人間関係')
+
+    page.keyboard.press.assert_not_called()
+    assert page.get_by_role.call_args_list[-1].kwargs['name'] == KEEP_CLOSE_NOTE_LABEL
 
 
 def test_clear_note_body_selects_and_deletes_only_the_body() -> None:

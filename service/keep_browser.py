@@ -39,6 +39,19 @@ def copy_note_to_google_docs(page: Page, title: str) -> str:
     return copied_url
 
 
+def read_note_body(page: Page, title: str) -> str:
+    """メモを開いて本文テキストを取得し、閉じてから返す。"""
+    card = _find_note_card(page, title)
+    card.click()
+
+    body = page.locator(KEEP_NOTE_BODY_SELECTOR)
+    body.wait_for(state='visible')
+    text = body.inner_text()
+
+    page.get_by_role('button', name=KEEP_CLOSE_NOTE_LABEL).click()
+    return text
+
+
 def clear_note_body(page: Page, title: str) -> None:
     """メモを開いて本文だけを削除する（次回の登録に備えてタイトルは残す）。"""
     card = _find_note_card(page, title)

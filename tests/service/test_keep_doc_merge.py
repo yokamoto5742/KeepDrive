@@ -12,6 +12,7 @@ DESTINATION_URL = 'https://docs.google.com/document/d/existing-1/edit'
 def stubs(monkeypatch: pytest.MonkeyPatch) -> dict[str, MagicMock]:
     """merge_memo が呼び出す下位関数をすべて差し替える。"""
     stub_names = (
+        'read_note_body',
         'copy_note_to_google_docs',
         'fetch_document_text',
         'append_text',
@@ -21,6 +22,7 @@ def stubs(monkeypatch: pytest.MonkeyPatch) -> dict[str, MagicMock]:
     created = {name: MagicMock() for name in stub_names}
     for name, stub in created.items():
         monkeypatch.setattr(f'service.keep_doc_merge.{name}', stub)
+    created['read_note_body'].return_value = '本文'
     created['copy_note_to_google_docs'].return_value = COPIED_URL
     set_documents(created, copied='本文\n', destination='既存\n')
     return created
@@ -102,6 +104,29 @@ def test_merge_memo_skips_append_when_everything_is_duplicated(
     # 全内容が結合先にある状態なので、コピー削除とメモ本文削除は実行する
     stubs['move_to_trash'].assert_called_once()
     stubs['clear_note_body'].assert_called_once()
+
+
+def test_merge_memo_skips_everything_when_note_body_is_empty(
+    stubs: dict[str, MagicMock]
+) -> None:
+    stubs['read_note_body'].return_value = '  \n '
+
+    call_merge()
+
+    stubs['copy_note_to_google_docs'].assert_not_called()
+    stubs['append_text'].assert_not_called()
+    stubs['move_to_trash'].assert_not_called()
+    stubs['clear_note_body'].assert_not_called()
+
+
+def test_merge_memo_appends_without_leading_blank_line_to_empty_destination(
+    stubs: dict[str, MagicMock]
+) -> None:
+    set_documents(stubs, copied='本文\n', destination='\n')
+
+    call_merge()
+
+    assert stubs['append_text'].call_args.args[2] == '本文'
 
 
 def test_remove_duplicate_lines_drops_lines_already_in_destination() -> None:

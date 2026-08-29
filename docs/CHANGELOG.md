@@ -8,6 +8,8 @@
 ## [Unreleased]
 
 ### 追加
+- `service/keep_browser.py` に `read_note_body` を追加。メモを開いて本文テキストを取得し、そのまま閉じる（編集はしない）
+- 本文が空のメモは何もせずスキップする処理を `service/keep_doc_merge.py` に追加（`MSG_MEMO_BODY_EMPTY`）。ドキュメントへのコピー・追記・コピーの削除・本文削除をいずれも行わない
 - 追記前に重複行を除外する処理を `service/keep_doc_merge.py` に追加。コピーしたメモの各行のうち、結合先ドキュメントに完全一致の行が既にあるものと、コピー内で重複する行を追記対象から外す（空行は段落の区切りとして残す）。除外の結果、追記する内容が空になった場合は追記せずコピーの削除とメモ本文の削除だけを行う
 - `service/keep_browser.py` に `clear_note_body` を追加。結合が完了したメモを開いて本文だけを削除する（次回の登録に備えてタイトルは残す）
 - `service/keep_browser.py` に Keep がログイン画面へ遷移した場合の判定を追加。ヘッドレスではログインできないため、ヘッドレスを外して起動し直す案内を出す
@@ -21,6 +23,7 @@
 - メモの処理開始ログを `service/keep_doc_merge.py` から `main.py` の `run()` へ移し、`[1/8]` のように全体の進捗が分かるようにした（`MSG_MEMO_START`）
 
 ### 修正
+- 空の結合先ドキュメントへ追記すると 1 行目が空行になっていた問題を修正。追記テキストの先頭に付ける区切りの改行を、結合先に既存の本文がある場合だけ付けるようにした（`_with_separator`）
 - 本文削除が `メモ「{title}」の本文を削除できませんでした` で断続的に失敗していた問題を修正（8件中4件が失敗していた）。本文をクリックした直後は Keep が非同期にキャレットを置き直すため、間を置かずに `Control+A` を押すと選択が解除され、続く `Delete` が空振り（キャレット位置によっては1文字だけ削除）していた。クリック後に `KEEP_CARET_SETTLE_SECONDS` 待ってから全選択し、削除できるまで `KEEP_CLEAR_BODY_MAX_ATTEMPTS` 回まで再試行する
 - ヘッドレス実行時に本文削除が `Locator.wait_for: Timeout 30000ms exceeded`（`get_by_role("textbox", name="メモ")`）で失敗していた問題を修正。現在の Keep のメモ本文は `aria-label` を持たない `role="combobox"`（オートコンプリート付き）で、`role="textbox"` の名前「メモ」では特定できないため、`KEEP_NOTE_BODY_SELECTOR`（`div[role="combobox"][contenteditable="true"]`）で特定する。タイトルは `role="textbox"` のままなので巻き込まない
 

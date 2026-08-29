@@ -93,6 +93,7 @@ MSG_MEMO_BODY_CLEARED: Final[str] = (
     'メモ「{title}」の本文を削除しました（タイトルは残しています）'
 )
 MSG_MEMO_BODY_NOT_CLEARED: Final[str] = 'メモ「{title}」の本文を削除できませんでした'
+MSG_MEMO_BODY_EMPTY: Final[str] = 'メモ「{title}」は本文が空のため処理をスキップします'
 
 # ドキュメント操作メッセージ
 MSG_INVALID_DOCUMENT_URL: Final[str] = (
