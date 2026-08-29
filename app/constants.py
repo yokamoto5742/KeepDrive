@@ -43,6 +43,10 @@ KEEP_OPEN_COPIED_DOC_LABEL: Final[str] = '開く'
 # ロールと編集可能属性で特定する（タイトルはrole="textbox"なので巻き込まない）
 KEEP_NOTE_BODY_SELECTOR: Final[str] = 'div[role="combobox"][contenteditable="true"]'
 KEEP_CLOSE_NOTE_LABEL: Final[str] = '閉じる'
+# 本文をクリックした直後はKeepが非同期にキャレットを置き直すため、
+# 待たずにControl+Aを押すと選択が解除されDeleteが空振りする
+KEEP_CARET_SETTLE_SECONDS: Final[float] = 1.0
+KEEP_CLEAR_BODY_MAX_ATTEMPTS: Final[int] = 3
 
 # Google ドキュメントのDOM依存値
 DOCS_URL_PATTERN: Final[str] = r'/document/d/([\w-]+)'

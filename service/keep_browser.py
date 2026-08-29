@@ -5,6 +5,8 @@ from playwright.sync_api import Locator, Page, TimeoutError as PlaywrightTimeout
 
 from app.constants import (
     DOCS_URL_GLOB,
+    KEEP_CARET_SETTLE_SECONDS,
+    KEEP_CLEAR_BODY_MAX_ATTEMPTS,
     KEEP_CLOSE_NOTE_LABEL,
     KEEP_COPY_TO_DOCS_LABEL,
     KEEP_LOGIN_URL_PREFIX,
@@ -44,15 +46,25 @@ def clear_note_body(page: Page, title: str) -> None:
 
     body = page.locator(KEEP_NOTE_BODY_SELECTOR)
     body.wait_for(state='visible')
-    body.click()
-    # フォーカスは本文のテキストボックス内にあるため、タイトルは選択されない
-    page.keyboard.press('Control+A')
-    page.keyboard.press('Delete')
-    if body.inner_text().strip():
+    for _ in range(KEEP_CLEAR_BODY_MAX_ATTEMPTS):
+        _select_all_and_delete(page, body)
+        if not body.inner_text().strip():
+            break
+    else:
         raise RuntimeError(MSG_MEMO_BODY_NOT_CLEARED.format(title=title))
 
     page.get_by_role('button', name=KEEP_CLOSE_NOTE_LABEL).click()
     logger.info(MSG_MEMO_BODY_CLEARED.format(title=title))
+
+
+def _select_all_and_delete(page: Page, body: Locator) -> None:
+    """本文にフォーカスを移し、キャレットが確定するのを待ってから全選択して消す。"""
+    body.click()
+    # 待たずにControl+Aを押すとKeepのキャレット再設定で選択が解除される
+    page.wait_for_timeout(KEEP_CARET_SETTLE_SECONDS * 1000)
+    # フォーカスは本文のテキストボックス内にあるため、タイトルは選択されない
+    page.keyboard.press('Control+A')
+    page.keyboard.press('Delete')
 
 
 def _find_note_card(page: Page, title: str) -> Locator:

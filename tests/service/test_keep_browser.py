@@ -4,6 +4,8 @@ import pytest
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
 from app.constants import (
+    KEEP_CARET_SETTLE_SECONDS,
+    KEEP_CLEAR_BODY_MAX_ATTEMPTS,
     KEEP_CLOSE_NOTE_LABEL,
     KEEP_COPY_TO_DOCS_LABEL,
     KEEP_LOGIN_URL_PREFIX,
@@ -130,12 +132,36 @@ def test_clear_note_body_closes_the_note_after_deleting() -> None:
     assert page.get_by_role.call_args_list[-1].kwargs['name'] == KEEP_CLOSE_NOTE_LABEL
 
 
+def test_clear_note_body_waits_before_selecting_all() -> None:
+    page = build_page()
+
+    clear_note_body(page, '人間関係')
+
+    page.wait_for_timeout.assert_called_once_with(KEEP_CARET_SETTLE_SECONDS * 1000)
+
+
+def test_clear_note_body_retries_while_body_still_has_text() -> None:
+    page = build_page()
+    get_body(page).inner_text.side_effect = ['残った本文', '']
+
+    clear_note_body(page, '人間関係')
+
+    assert [call.args[0] for call in page.keyboard.press.call_args_list] == [
+        'Control+A',
+        'Delete',
+        'Control+A',
+        'Delete',
+    ]
+
+
 def test_clear_note_body_raises_when_body_still_has_text() -> None:
     page = build_page()
     get_body(page).inner_text.return_value = '残った本文'
 
     with pytest.raises(RuntimeError):
         clear_note_body(page, '人間関係')
+
+    assert get_body(page).click.call_count == KEEP_CLEAR_BODY_MAX_ATTEMPTS
 
 
 def test_clear_note_body_raises_lookup_error_when_memo_is_missing() -> None:

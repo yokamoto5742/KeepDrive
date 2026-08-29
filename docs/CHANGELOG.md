@@ -21,6 +21,7 @@
 - メモの処理開始ログを `service/keep_doc_merge.py` から `main.py` の `run()` へ移し、`[1/8]` のように全体の進捗が分かるようにした（`MSG_MEMO_START`）
 
 ### 修正
+- 本文削除が `メモ「{title}」の本文を削除できませんでした` で断続的に失敗していた問題を修正（8件中4件が失敗していた）。本文をクリックした直後は Keep が非同期にキャレットを置き直すため、間を置かずに `Control+A` を押すと選択が解除され、続く `Delete` が空振り（キャレット位置によっては1文字だけ削除）していた。クリック後に `KEEP_CARET_SETTLE_SECONDS` 待ってから全選択し、削除できるまで `KEEP_CLEAR_BODY_MAX_ATTEMPTS` 回まで再試行する
 - ヘッドレス実行時に本文削除が `Locator.wait_for: Timeout 30000ms exceeded`（`get_by_role("textbox", name="メモ")`）で失敗していた問題を修正。現在の Keep のメモ本文は `aria-label` を持たない `role="combobox"`（オートコンプリート付き）で、`role="textbox"` の名前「メモ」では特定できないため、`KEEP_NOTE_BODY_SELECTOR`（`div[role="combobox"][contenteditable="true"]`）で特定する。タイトルは `role="textbox"` のままなので巻き込まない
 
 ## [1.1.0] - 2026-08-28
