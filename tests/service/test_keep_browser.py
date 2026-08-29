@@ -8,7 +8,7 @@ from app.constants import (
     KEEP_COPY_TO_DOCS_LABEL,
     KEEP_LOGIN_URL_PREFIX,
     KEEP_MORE_MENU_LABEL,
-    KEEP_NOTE_BODY_LABEL,
+    KEEP_NOTE_BODY_SELECTOR,
     KEEP_NOTE_CARD_SELECTOR,
     KEEP_OPEN_COPIED_DOC_LABEL,
 )
@@ -22,7 +22,7 @@ def build_page(copied_url: str = COPIED_URL) -> MagicMock:
     page = MagicMock()
     page.url = KEEP_URL
     page.locator.return_value.filter.return_value.first = MagicMock()
-    page.get_by_role.return_value.inner_text.return_value = ''
+    page.locator.return_value.inner_text.return_value = ''
     copied_page = MagicMock()
     copied_page.url = copied_url
     page.context.expect_page.return_value.__enter__.return_value.value = copied_page
@@ -31,6 +31,10 @@ def build_page(copied_url: str = COPIED_URL) -> MagicMock:
 
 def get_card(page: MagicMock) -> MagicMock:
     return page.locator.return_value.filter.return_value.first
+
+
+def get_body(page: MagicMock) -> MagicMock:
+    return page.locator.return_value
 
 
 def get_copied_page(page: MagicMock) -> MagicMock:
@@ -110,8 +114,8 @@ def test_clear_note_body_selects_and_deletes_only_the_body() -> None:
     clear_note_body(page, '人間関係')
 
     get_card(page).click.assert_called_once()
-    assert page.get_by_role.call_args_list[0].kwargs['name'] == KEEP_NOTE_BODY_LABEL
-    page.get_by_role.return_value.click.assert_called()
+    assert page.locator.call_args_list[-1].args[0] == KEEP_NOTE_BODY_SELECTOR
+    get_body(page).click.assert_called()
     assert [call.args[0] for call in page.keyboard.press.call_args_list] == [
         'Control+A',
         'Delete',
@@ -128,7 +132,7 @@ def test_clear_note_body_closes_the_note_after_deleting() -> None:
 
 def test_clear_note_body_raises_when_body_still_has_text() -> None:
     page = build_page()
-    page.get_by_role.return_value.inner_text.return_value = '残った本文'
+    get_body(page).inner_text.return_value = '残った本文'
 
     with pytest.raises(RuntimeError):
         clear_note_body(page, '人間関係')

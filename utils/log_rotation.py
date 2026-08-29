@@ -2,6 +2,7 @@ import configparser
 import logging
 import os
 import re
+import sys
 from datetime import datetime, timedelta
 from logging.handlers import TimedRotatingFileHandler
 
@@ -54,9 +55,11 @@ def setup_logging(config: configparser.ConfigParser | None = None) -> None:
 
         root_logger.addHandler(file_handler)
 
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(formatter)
-        console_handler.setLevel(logging.WARNING)
+        # コマンドプロンプトで進行状況を追えるように、ファイルと同じレベルで簡潔に出力する
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setFormatter(
+            logging.Formatter('%(asctime)s %(message)s', datefmt='%H:%M:%S')
+        )
         root_logger.addHandler(console_handler)
 
         cleanup_old_logs(log_directory, log_retention_days, project_name)

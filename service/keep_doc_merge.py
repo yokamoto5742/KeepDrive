@@ -5,7 +5,6 @@ from playwright.sync_api import Page
 from app.constants import (
     MSG_COPIED_DOC_TRASHED,
     MSG_DUPLICATE_LINES_SKIPPED,
-    MSG_MEMO_START,
     MSG_MERGE_SUCCESS,
     MSG_NO_NEW_CONTENT,
 )
@@ -17,8 +16,6 @@ logger = logging.getLogger(__name__)
 
 def merge_memo(page: Page, title: str, destination_url: str) -> None:
     """メモ1件をコピーし、重複を除いて追記したうえでコピーとメモ本文を消す。"""
-    logger.info(MSG_MEMO_START.format(title=title))
-
     copied_url = copy_note_to_google_docs(page, title)
     copied_text = fetch_document_text(page, copied_url)
     destination_text = fetch_document_text(page, destination_url)

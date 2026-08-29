@@ -17,6 +17,11 @@
 - 自動起動する Chrome をヘッドレス（`--headless=new`）にした。ヘッドレスの既定ウィンドウでは Keep のカード配置が崩れるため `--window-size=1920,1080` も指定する
 - `service/chrome_session.py` の `connect_chrome` が `(Browser, Popen | None)` を返すようになった。自分で起動した Chrome だけを終了するための判定に使う
 - `service/keep_browser.py` のメモカード検索を `_find_note_card` に切り出し、コピー処理と本文削除処理で共有する
+- 進行状況をコマンドプロンプトで確認できるように、コンソールへのログ出力レベルを `WARNING` から設定ファイルのログレベル（既定 `INFO`）へ変更した。出力先は標準出力、形式は `時刻 メッセージ` の簡潔なものにする
+- メモの処理開始ログを `service/keep_doc_merge.py` から `main.py` の `run()` へ移し、`[1/8]` のように全体の進捗が分かるようにした（`MSG_MEMO_START`）
+
+### 修正
+- ヘッドレス実行時に本文削除が `Locator.wait_for: Timeout 30000ms exceeded`（`get_by_role("textbox", name="メモ")`）で失敗していた問題を修正。現在の Keep のメモ本文は `aria-label` を持たない `role="combobox"`（オートコンプリート付き）で、`role="textbox"` の名前「メモ」では特定できないため、`KEEP_NOTE_BODY_SELECTOR`（`div[role="combobox"][contenteditable="true"]`）で特定する。タイトルは `role="textbox"` のままなので巻き込まない
 
 ## [1.1.0] - 2026-08-28
 

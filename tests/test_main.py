@@ -54,6 +54,21 @@ def test_run_passes_title_and_destination_url_to_merge(
     assert stubs['merge_memo'].call_args.args[1:] == ('人間関係', DOCUMENT_URL)
 
 
+def test_run_logs_progress_for_each_memo(
+    stubs: dict[str, MagicMock], caplog: pytest.LogCaptureFixture
+) -> None:
+    stubs['get_merge_targets'].return_value = {
+        '人間関係': DOCUMENT_URL,
+        '読書': DOCUMENT_URL,
+    }
+
+    with caplog.at_level('INFO', logger='main'):
+        main.run()
+
+    assert '[1/2] メモ「人間関係」の処理を開始します' in caplog.text
+    assert '[2/2] メモ「読書」の処理を開始します' in caplog.text
+
+
 def test_run_returns_one_without_target_memo(stubs: dict[str, MagicMock]) -> None:
     stubs['get_merge_targets'].return_value = {}
 

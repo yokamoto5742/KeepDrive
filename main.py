@@ -4,6 +4,7 @@ import sys
 from app.constants import (
     MSG_FATAL_ERROR,
     MSG_MEMO_MERGE_FAILED,
+    MSG_MEMO_START,
     MSG_MERGE_COMPLETED,
     MSG_MERGE_START,
     MSG_NO_TARGET_MEMO,
@@ -29,7 +30,12 @@ def run() -> int:
 
     failure_count = 0
     with open_chrome_page() as page:
-        for title, destination_url in targets.items():
+        for current, (title, destination_url) in enumerate(targets.items(), start=1):
+            logger.info(
+                MSG_MEMO_START.format(
+                    current=current, total=len(targets), title=title
+                )
+            )
             # 1件の失敗で残りのメモを止めない
             try:
                 merge_memo(page, title, destination_url)

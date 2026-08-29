@@ -9,7 +9,7 @@ from app.constants import (
     KEEP_COPY_TO_DOCS_LABEL,
     KEEP_LOGIN_URL_PREFIX,
     KEEP_MORE_MENU_LABEL,
-    KEEP_NOTE_BODY_LABEL,
+    KEEP_NOTE_BODY_SELECTOR,
     KEEP_NOTE_CARD_SELECTOR,
     KEEP_OPEN_COPIED_DOC_LABEL,
     KEEP_SEARCH_URL,
@@ -42,7 +42,7 @@ def clear_note_body(page: Page, title: str) -> None:
     card = _find_note_card(page, title)
     card.click()
 
-    body = page.get_by_role('textbox', name=KEEP_NOTE_BODY_LABEL)
+    body = page.locator(KEEP_NOTE_BODY_SELECTOR)
     body.wait_for(state='visible')
     body.click()
     # フォーカスは本文のテキストボックス内にあるため、タイトルは選択されない

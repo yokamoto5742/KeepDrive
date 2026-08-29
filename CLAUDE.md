@@ -51,10 +51,8 @@ main.run()
 - Chrome 136 以降は**デフォルトプロファイルだと `--remote-debugging-port` が黙って無視される**。`chrome_session.launch_chrome()` は専用プロファイル `%LocalAppData%\KeepDrive\ChromeProfile` で起動する。このプロファイルは初回のみ手動で Google ログインが必要（普段使いの Chrome とは別物なので、同時起動しても競合しない）。
 - 自動起動する Chrome は**ヘッドレス**（`--headless=new`）。ヘッドレスではログイン操作ができないため、専用プロファイルのログインが切れると `MSG_KEEP_LOGIN_REQUIRED` で失敗する。復旧するには `CHROME_LAUNCH_ARGS` から `--headless=new` を一時的に外して起動し、ログインし直す。
 - **終了するのは自分で起動した Chrome だけ。** 既に `9222` で待ち受けている Chrome に接続した場合は CDP を切断するだけで終了しない（ユーザーが手動で開いている Chrome を閉じないため）。`connect_chrome()` は起動した場合のみ `Popen` を返し、`_close_session()` がその判定に使う。
-- セレクタは Keep の DOM（`div[tabindex="0"]` のカード、`その他` ボタン、`Google ドキュメントにコピー` メニュー、コピー完了通知の `開く`、メモ本文の textbox `メモ`、`閉じる` ボタン）と Google ドキュメントの DOM（`.kix-appview-editor`、`ファイル` / `ゴミ箱に移動` メニュー）に依存する。UI 変更や表示言語の違いで壊れるため、ラベルは `app/constants.py` で調整する。
+- セレクタは Keep の DOM（`div[tabindex="0"]` のカード、`その他` ボタン、`Google ドキュメントにコピー` メニュー、コピー完了通知の `開く`、メモ本文の `div[role="combobox"][contenteditable="true"]`、`閉じる` ボタン）と Google ドキュメントの DOM（`.kix-appview-editor`、`ファイル` / `ゴミ箱に移動` メニュー）に依存する。UI 変更や表示言語の違いで壊れるため、ラベルは `app/constants.py` で調整する。
 - 追記直後はドライブへの保存が終わっていない。`docs_browser._wait_until_saved()` がエクスポートを再取得して反映を確認する。
-- `credentials.json` / `token.json` は使用しない。Git 管理対象外かつ Claude の編集禁止。
-- `docs/Google Keep メモ自動集約アプリ.md` は gkeepapi 時代の仕様書で、現在の実装とは一致しない。
 
 ## コード規約（`.claude/rules/` の補足）
 

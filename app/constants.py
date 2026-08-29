@@ -39,7 +39,9 @@ KEEP_LOGIN_URL_PREFIX: Final[str] = 'https://accounts.google.com'
 KEEP_MORE_MENU_LABEL: Final[str] = 'その他'
 KEEP_COPY_TO_DOCS_LABEL: Final[str] = 'Google ドキュメントにコピー'
 KEEP_OPEN_COPIED_DOC_LABEL: Final[str] = '開く'
-KEEP_NOTE_BODY_LABEL: Final[str] = 'メモ'
+# メモ本文はrole="combobox"（オートコンプリート付き）でaria-labelを持たないため、
+# ロールと編集可能属性で特定する（タイトルはrole="textbox"なので巻き込まない）
+KEEP_NOTE_BODY_SELECTOR: Final[str] = 'div[role="combobox"][contenteditable="true"]'
 KEEP_CLOSE_NOTE_LABEL: Final[str] = '閉じる'
 
 # Google ドキュメントのDOM依存値
@@ -105,7 +107,7 @@ MSG_NO_TARGET_MEMO: Final[str] = (
     'config.iniの[KEEP]セクションに「メモタイトル = 結合先ドキュメントURL」が'
     '設定されていません'
 )
-MSG_MEMO_START: Final[str] = 'メモ「{title}」の処理を開始します'
+MSG_MEMO_START: Final[str] = '[{current}/{total}] メモ「{title}」の処理を開始します'
 MSG_MERGE_SUCCESS: Final[str] = '既存ドキュメント「{title}」に内容を結合しました'
 MSG_DUPLICATE_LINES_SKIPPED: Final[str] = (
     'メモ「{title}」の重複行{count}件を追記対象から除外しました'
