@@ -24,8 +24,7 @@ CDP で既存の Chrome に接続するため、`playwright install` は不要�
 ### 2. 対象のメモと結合先ドキュメントを指定する
 
 `utils/config.ini.example` を `utils/config.ini` にコピーし、`[KEEP]` セクションに
-「メモタイトル = 結合先ドキュメントURL」を1行ずつ書きます
-（`utils/config.ini` は個人のドキュメントURLを含むため Git 管理外です）。
+「メモタイトル = 結合先ドキュメントURL」を1行ずつ書きます 。
 
 ```ini
 # メモタイトル = 結合先ドキュメントURL

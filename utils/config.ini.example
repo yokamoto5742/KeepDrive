@@ -1,0 +1,11 @@
+[LOGGING]
+log_retention_days = 7
+log_directory = logs
+# DEBUG,INFO,WARNING,ERROR
+log_level = INFO
+project_name = KeepDrive
+
+# メモタイトル = 結合先ドキュメントURL
+[KEEP]
+人間関係 = https://docs.google.com/document/d/xxxxxxxxxxxxxxxxxxxxxxxxxxxx/edit
+読書メモ = https://docs.google.com/document/d/yyyyyyyyyyyyyyyyyyyyyyyyyyyy/edit
