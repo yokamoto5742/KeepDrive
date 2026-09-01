@@ -1,11 +1,13 @@
 import logging
+from collections.abc import Iterator
+from contextlib import contextmanager
 from urllib.parse import quote
 
 from playwright.sync_api import Locator, Page, TimeoutError as PlaywrightTimeoutError
 
 from app.constants import (
     DOCS_URL_GLOB,
-    KEEP_CARET_SETTLE_SECONDS,
+    KEEP_CARET_SETTLE_MS,
     KEEP_CLEAR_BODY_MAX_ATTEMPTS,
     KEEP_CLOSE_NOTE_LABEL,
     KEEP_COPY_TO_DOCS_LABEL,
@@ -39,34 +41,35 @@ def copy_note_to_google_docs(page: Page, title: str) -> str:
     return copied_url
 
 
-def read_note_body(page: Page, title: str) -> str:
-    """メモを開いて本文テキストを取得し、閉じてから返す。"""
-    card = _find_note_card(page, title)
-    card.click()
+@contextmanager
+def _opened_note_body(page: Page, title: str) -> Iterator[Locator]:
+    """メモを開いて本文要素を渡し、失敗しても必ず閉じる。"""
+    _find_note_card(page, title).click()
 
     body = page.locator(KEEP_NOTE_BODY_SELECTOR)
     body.wait_for(state='visible')
-    text = body.inner_text()
+    try:
+        yield body
+    finally:
+        page.get_by_role('button', name=KEEP_CLOSE_NOTE_LABEL).click()
 
-    page.get_by_role('button', name=KEEP_CLOSE_NOTE_LABEL).click()
-    return text
+
+def read_note_body(page: Page, title: str) -> str:
+    """メモを開いて本文テキストを取得し、閉じてから返す。"""
+    with _opened_note_body(page, title) as body:
+        return body.inner_text()
 
 
 def clear_note_body(page: Page, title: str) -> None:
     """メモを開いて本文だけを削除する（次回の登録に備えてタイトルは残す）。"""
-    card = _find_note_card(page, title)
-    card.click()
+    with _opened_note_body(page, title) as body:
+        for _ in range(KEEP_CLEAR_BODY_MAX_ATTEMPTS):
+            _select_all_and_delete(page, body)
+            if not body.inner_text().strip():
+                break
+        else:
+            raise RuntimeError(MSG_MEMO_BODY_NOT_CLEARED.format(title=title))
 
-    body = page.locator(KEEP_NOTE_BODY_SELECTOR)
-    body.wait_for(state='visible')
-    for _ in range(KEEP_CLEAR_BODY_MAX_ATTEMPTS):
-        _select_all_and_delete(page, body)
-        if not body.inner_text().strip():
-            break
-    else:
-        raise RuntimeError(MSG_MEMO_BODY_NOT_CLEARED.format(title=title))
-
-    page.get_by_role('button', name=KEEP_CLOSE_NOTE_LABEL).click()
     logger.info(MSG_MEMO_BODY_CLEARED.format(title=title))
 
 
@@ -74,7 +77,7 @@ def _select_all_and_delete(page: Page, body: Locator) -> None:
     """本文にフォーカスを移し、キャレットが確定するのを待ってから全選択して消す。"""
     body.click()
     # 待たずにControl+Aを押すとKeepのキャレット再設定で選択が解除される
-    page.wait_for_timeout(KEEP_CARET_SETTLE_SECONDS * 1000)
+    page.wait_for_timeout(KEEP_CARET_SETTLE_MS)
     # フォーカスは本文のテキストボックス内にあるため、タイトルは選択されない
     page.keyboard.press('Control+A')
     page.keyboard.press('Delete')

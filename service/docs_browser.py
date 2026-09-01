@@ -1,6 +1,5 @@
 import logging
 import re
-import time
 
 from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
 
@@ -10,7 +9,7 @@ from app.constants import (
     DOCS_EXPORT_URL,
     DOCS_FILE_MENU_LABEL,
     DOCS_MOVE_TO_TRASH_LABEL,
-    DOCS_SAVE_POLL_INTERVAL_SECONDS,
+    DOCS_SAVE_POLL_INTERVAL_MS,
     DOCS_SAVE_POLL_MAX_ATTEMPTS,
     DOCS_URL_PATTERN,
     MSG_APPEND_NOT_SAVED,
@@ -35,8 +34,6 @@ def fetch_document_text(page: Page, document_url: str) -> str:
 
 def append_text(page: Page, document_url: str, text: str) -> None:
     """ドキュメント末尾へテキストを入力し、保存されたことを確認する。"""
-    text_before_append = fetch_document_text(page, document_url)
-
     page.goto(document_url)
     editor = page.locator(DOCS_EDITOR_SELECTOR)
     editor.wait_for(state='visible')
@@ -44,7 +41,7 @@ def append_text(page: Page, document_url: str, text: str) -> None:
     page.keyboard.press('Control+End')
     _input_paragraphs(page, text)
 
-    _wait_until_saved(page, document_url, text_before_append, text)
+    _wait_until_saved(page, document_url, text)
 
 
 def move_to_trash(page: Page, document_url: str) -> None:
@@ -72,16 +69,14 @@ def _input_paragraphs(page: Page, text: str) -> None:
             page.keyboard.insert_text(line)
 
 
-def _wait_until_saved(
-    page: Page, document_url: str, text_before_append: str, appended_text: str
-) -> None:
+def _wait_until_saved(page: Page, document_url: str, appended_text: str) -> None:
     """エクスポート結果で保存反映を確認する（未保存のままコピーを消さないため）。"""
+    # 追記対象は結合先に存在しない行だけなので、見つかれば保存されたと判断できる
     expected = appended_text.strip('\n')
 
     for _ in range(DOCS_SAVE_POLL_MAX_ATTEMPTS):
-        time.sleep(DOCS_SAVE_POLL_INTERVAL_SECONDS)
-        current_text = fetch_document_text(page, document_url)
-        if current_text != text_before_append and expected in current_text:
+        page.wait_for_timeout(DOCS_SAVE_POLL_INTERVAL_MS)
+        if expected in fetch_document_text(page, document_url):
             return
 
     raise TimeoutError(MSG_APPEND_NOT_SAVED.format(url=document_url))

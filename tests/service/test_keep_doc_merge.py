@@ -147,3 +147,7 @@ def test_remove_duplicate_lines_keeps_blank_lines_as_paragraph_breaks() -> None:
 
 def test_remove_duplicate_lines_returns_empty_when_all_lines_are_duplicated() -> None:
     assert _remove_duplicate_lines('a\n\nb\n', 'a\nb') == ''
+
+
+def test_remove_duplicate_lines_collapses_blank_lines_left_by_removal() -> None:
+    assert _remove_duplicate_lines('a\n\nb\n\nc', 'b') == 'a\n\nc'

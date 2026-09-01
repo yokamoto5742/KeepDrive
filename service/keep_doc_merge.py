@@ -20,7 +20,10 @@ logger = logging.getLogger(__name__)
 
 
 def merge_memo(page: Page, title: str, destination_url: str) -> None:
-    """メモ1件をコピーし、重複を除いて追記したうえでコピーとメモ本文を消す。"""
+    """メモ1件をコピーし、重複を除いて追記したうえでコピーとメモ本文を消す。
+
+    先に本文を読むのは、空メモで不要なコピー用ドキュメントを作らないため。
+    """
     if not read_note_body(page, title).strip():
         logger.info(MSG_MEMO_BODY_EMPTY.format(title=title))
         return
@@ -56,7 +59,9 @@ def _remove_duplicate_lines(copied_text: str, destination_text: str) -> str:
     for line in copied_text.split('\n'):
         key = line.strip()
         if not key:
-            kept.append(line)  # 空行は段落の区切りとして残す
+            # 空行は段落の区切りとして残すが、重複除去で生じた連続空行は畳む
+            if kept and kept[-1].strip():
+                kept.append(line)
             continue
         if key in seen:
             continue

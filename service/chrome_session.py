@@ -68,6 +68,8 @@ def connect_chrome(playwright: Playwright) -> tuple[Browser, "subprocess.Popen[b
         except PlaywrightError as e:
             last_error = e
 
+    # 接続できなかった起動済みChromeはヘッドレスで見えないまま残るため、ここで回収する
+    process.kill()
     raise ConnectionError(
         MSG_CHROME_CONNECT_FAILED.format(url=CHROME_CDP_URL, error=last_error)
     ) from last_error

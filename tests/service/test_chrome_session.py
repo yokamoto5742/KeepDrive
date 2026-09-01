@@ -59,6 +59,21 @@ def test_connect_chrome_raises_when_launch_does_not_help(
         connect_chrome(playwright)
 
 
+def test_connect_chrome_kills_launched_chrome_when_it_never_connects(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    launched = MagicMock()
+    monkeypatch.setattr('service.chrome_session.launch_chrome', launched)
+    monkeypatch.setattr('service.chrome_session.CHROME_LAUNCH_MAX_ATTEMPTS', 2)
+    playwright = build_playwright(*[PlaywrightError('ECONNREFUSED')] * 3)
+
+    with pytest.raises(ConnectionError):
+        connect_chrome(playwright)
+
+    # 起動したヘッドレスChromeを孤児プロセスとして残さない
+    launched.return_value.kill.assert_called_once()
+
+
 def test_find_chrome_executable_returns_existing_path(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

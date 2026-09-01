@@ -19,11 +19,11 @@ logger = logging.getLogger(__name__)
 
 def run() -> int:
     """対象メモをGoogleドキュメントへコピーし、結合先ドキュメントへ追記する。"""
-    config = load_config()
-    setup_logging(config)
+    # 設定読み込みが失敗しても記録が残るよう、ログを先に初期化する
+    setup_logging()
     logger.info(MSG_MERGE_START)
 
-    targets = get_merge_targets(config)
+    targets = get_merge_targets(load_config())
     if not targets:
         logger.warning(MSG_NO_TARGET_MEMO)
         return 1
@@ -55,7 +55,7 @@ def main() -> int:
     try:
         return run()
     except Exception as e:
-        logging.error(MSG_FATAL_ERROR.format(error=e), exc_info=True)
+        logger.error(MSG_FATAL_ERROR.format(error=e), exc_info=True)
         return 1
 
 

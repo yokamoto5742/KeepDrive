@@ -14,11 +14,6 @@ from service.docs_browser import (
 DOCUMENT_URL = 'https://docs.google.com/document/d/doc-1/edit'
 
 
-@pytest.fixture(autouse=True)
-def no_sleep(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr('service.docs_browser.time.sleep', lambda _: None)
-
-
 def build_export_response(text: str) -> MagicMock:
     response = MagicMock(ok=True, status=200)
     response.text.return_value = text
