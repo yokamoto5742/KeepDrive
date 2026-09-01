@@ -80,9 +80,20 @@ def _select_all_and_delete(page: Page, body: Locator) -> None:
     page.keyboard.press('Delete')
 
 
+def _open_search(page: Page, title: str) -> None:
+    """タイトルの検索結果を開く。同一ページ内の遷移になる場合は再読み込みする。"""
+    url = KEEP_SEARCH_URL.format(query=quote(title))
+    # ハッシュだけが変わる遷移ではDOMが再構築されず、直前に開いたメモの
+    # オーバーレイが残ってカードのhover・clickを奪い続ける
+    needs_reload = page.url.split('#', 1)[0] == url.split('#', 1)[0]
+    page.goto(url)
+    if needs_reload:
+        page.reload()
+
+
 def _find_note_card(page: Page, title: str) -> Locator:
     """タイトルで検索し、該当するメモカードを返す。"""
-    page.goto(KEEP_SEARCH_URL.format(query=quote(title)))
+    _open_search(page, title)
     if page.url.startswith(KEEP_LOGIN_URL_PREFIX):
         raise ConnectionError(MSG_KEEP_LOGIN_REQUIRED)
 

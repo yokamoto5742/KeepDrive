@@ -55,6 +55,23 @@ def test_copy_note_opens_search_url_for_the_title() -> None:
     assert '%E4%BA%BA%E9%96%93%E9%96%A2%E4%BF%82' in page.goto.call_args.args[0]
 
 
+def test_copy_note_reloads_when_already_on_keep() -> None:
+    page = build_page()
+
+    copy_note_to_google_docs(page, '人間関係')
+
+    page.reload.assert_called_once()
+
+
+def test_copy_note_does_not_reload_when_coming_from_another_page() -> None:
+    page = build_page()
+    page.url = COPIED_URL
+
+    copy_note_to_google_docs(page, '人間関係')
+
+    page.reload.assert_not_called()
+
+
 def test_copy_note_finds_card_by_note_card_selector() -> None:
     page = build_page()
 
