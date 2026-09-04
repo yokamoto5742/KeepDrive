@@ -2,6 +2,13 @@ from typing import Final
 
 # 設定ファイル
 CONFIG_SECTION_KEEP: Final[str] = 'KEEP'
+CONFIG_SECTION_LOGGING: Final[str] = 'LOGGING'
+
+# ログ出力
+LOG_ROTATION_SUFFIX: Final[str] = '%Y-%m-%d.log'
+LOG_FILE_FORMAT: Final[str] = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+LOG_CONSOLE_FORMAT: Final[str] = '%(asctime)s %(message)s'
+LOG_CONSOLE_DATE_FORMAT: Final[str] = '%H:%M:%S'
 
 # ブラウザ操作（Playwright）
 # localhostはIPv6（::1）に解決されることがあり、IPv4のみで待ち受けるChromeに繋がらない
@@ -80,6 +87,9 @@ MSG_CHROME_CLOSE_FAILED: Final[str] = 'Chromeの終了に失敗しました: {er
 
 # Keep操作メッセージ
 MSG_MEMO_NOT_FOUND: Final[str] = 'Keepに指定タイトルのメモが見つかりません: {title}'
+MSG_MEMO_AMBIGUOUS: Final[str] = (
+    'タイトル「{title}」に一致するメモが{count}件あり、対象を特定できません'
+)
 MSG_MEMO_COPIED: Final[str] = 'メモ「{title}」をGoogleドキュメントにコピーしました'
 MSG_COPIED_DOC_NOT_OPENED: Final[str] = (
     'コピー完了通知の「{label}」を押せず、コピー先ドキュメントを特定できません: {title}'
@@ -128,3 +138,14 @@ MSG_MERGE_COMPLETED: Final[str] = (
     '結合処理が完了しました（成功: {success}件 / 失敗: {failure}件）'
 )
 MSG_FATAL_ERROR: Final[str] = '処理を中断しました: {error}'
+
+# 設定・ログ初期化メッセージ
+MSG_CONFIG_NOT_FOUND: Final[str] = '設定ファイルが見つかりません: {path}'
+MSG_LOG_INITIALIZED: Final[str] = 'ログシステムが初期化されました: {path}'
+MSG_INVALID_LOG_LEVEL: Final[str] = (
+    "無効なログレベル '{level}' が指定されました。INFOを使用します。"
+)
+MSG_LOG_FILE_DELETED: Final[str] = '古いログファイルを削除しました: {name}'
+MSG_LOG_FILE_DELETE_FAILED: Final[str] = (
+    'ログファイルの削除中にエラーが発生しました {name}: {error}'
+)

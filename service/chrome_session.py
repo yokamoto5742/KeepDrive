@@ -41,7 +41,7 @@ def find_chrome_executable() -> str:
     raise FileNotFoundError(MSG_CHROME_NOT_FOUND.format(paths=' / '.join(candidates)))
 
 
-def launch_chrome() -> "subprocess.Popen[bytes]":
+def launch_chrome() -> subprocess.Popen[bytes]:
     """リモートデバッグを有効にしたChromeをヘッドレスの専用プロファイルで起動する。"""
     executable = find_chrome_executable()
     user_data_dir = os.path.expandvars(CHROME_USER_DATA_DIR)
@@ -50,7 +50,9 @@ def launch_chrome() -> "subprocess.Popen[bytes]":
     return subprocess.Popen([executable, *args])
 
 
-def connect_chrome(playwright: Playwright) -> tuple[Browser, "subprocess.Popen[bytes] | None"]:
+def connect_chrome(
+    playwright: Playwright,
+) -> tuple[Browser, subprocess.Popen[bytes] | None]:
     """CDP接続する。未起動ならChromeを起動して接続できるまで待つ。
 
     自分で起動した場合のみプロセスを返す（終了してよいかの判断に使う）。
@@ -95,7 +97,7 @@ def open_chrome_page() -> Iterator[Page]:
 
 
 def _close_session(
-    page: Page, browser: Browser, process: "subprocess.Popen[bytes] | None"
+    page: Page, browser: Browser, process: subprocess.Popen[bytes] | None
 ) -> None:
     """自分で起動したChromeは終了する。手動起動のChromeは切断だけに留める。"""
     if process is None:
@@ -112,7 +114,7 @@ def _close_session(
     _terminate(process)
 
 
-def _terminate(process: "subprocess.Popen[bytes]") -> None:
+def _terminate(process: subprocess.Popen[bytes]) -> None:
     """Chromeプロセスの終了を待ち、残っていれば強制終了する。"""
     try:
         process.wait(timeout=CHROME_CLOSE_TIMEOUT_SECONDS)

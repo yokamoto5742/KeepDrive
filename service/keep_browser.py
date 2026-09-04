@@ -19,6 +19,7 @@ from app.constants import (
     KEEP_SEARCH_URL,
     MSG_COPIED_DOC_NOT_OPENED,
     MSG_KEEP_LOGIN_REQUIRED,
+    MSG_MEMO_AMBIGUOUS,
     MSG_MEMO_BODY_CLEARED,
     MSG_MEMO_BODY_NOT_CLEARED,
     MSG_MEMO_COPIED,
@@ -46,6 +47,8 @@ def _opened_note_body(page: Page, title: str) -> Iterator[Locator]:
     """メモを開いて本文要素を渡し、失敗しても必ず閉じる。"""
     _find_note_card(page, title).click()
 
+    # 開いているメモは常に1件なので、複数一致したらPlaywrightのstrict modeで
+    # 失敗させる（.firstで絞ると別要素の本文を消しかねない）
     body = page.locator(KEEP_NOTE_BODY_SELECTOR)
     body.wait_for(state='visible')
     try:
@@ -100,13 +103,22 @@ def _find_note_card(page: Page, title: str) -> Locator:
     if page.url.startswith(KEEP_LOGIN_URL_PREFIX):
         raise ConnectionError(MSG_KEEP_LOGIN_REQUIRED)
 
-    card = page.locator(KEEP_NOTE_CARD_SELECTOR).filter(
+    cards = page.locator(KEEP_NOTE_CARD_SELECTOR).filter(
         has=page.get_by_text(title, exact=True)
-    ).first
+    )
+    card = cards.first
     try:
         card.wait_for(state='visible')
     except PlaywrightTimeoutError as e:
         raise LookupError(MSG_MEMO_NOT_FOUND.format(title=title)) from e
+
+    # タイトルと同じ行を本文に持つメモも候補に入る。clear_note_body()の対象を
+    # 取り違えると無関係なメモの本文が消えるため、曖昧なままでは進めない
+    matched_count = cards.count()
+    if matched_count > 1:
+        raise LookupError(
+            MSG_MEMO_AMBIGUOUS.format(title=title, count=matched_count)
+        )
 
     return card
 

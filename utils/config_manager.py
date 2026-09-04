@@ -1,22 +1,10 @@
 import configparser
-import os
-import sys
 from pathlib import Path
 from typing import Final
 
-from app.constants import CONFIG_SECTION_KEEP
+from app.constants import CONFIG_SECTION_KEEP, MSG_CONFIG_NOT_FOUND
 
-
-def get_config_path() -> Path:
-    # 実行ファイルのディレクトリを取得
-    if getattr(sys, 'frozen', False):
-        base_path = Path(sys._MEIPASS)  # type: ignore[attr-defined]
-    else:
-        base_path = Path(os.path.dirname(os.path.abspath(__file__)))
-    return base_path / 'config.ini'
-
-
-CONFIG_PATH: Final[Path] = get_config_path()
+CONFIG_PATH: Final[Path] = Path(__file__).resolve().parent / 'config.ini'
 
 
 class CaseSensitiveConfigParser(configparser.ConfigParser):
@@ -28,7 +16,7 @@ class CaseSensitiveConfigParser(configparser.ConfigParser):
 
 def load_config(config_file: Path = CONFIG_PATH) -> configparser.ConfigParser:
     if not config_file.exists():
-        raise FileNotFoundError(f'Config file not found: {config_file}')
+        raise FileNotFoundError(MSG_CONFIG_NOT_FOUND.format(path=config_file))
 
     config = CaseSensitiveConfigParser()
     config.read(config_file, encoding='utf-8')

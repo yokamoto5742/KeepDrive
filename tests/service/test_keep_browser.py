@@ -28,11 +28,16 @@ def build_page(copied_url: str = COPIED_URL) -> MagicMock:
     page = MagicMock()
     page.url = KEEP_URL
     page.locator.return_value.filter.return_value.first = MagicMock()
+    page.locator.return_value.filter.return_value.count.return_value = 1
     page.locator.return_value.inner_text.return_value = ''
     copied_page = MagicMock()
     copied_page.url = copied_url
     page.context.expect_page.return_value.__enter__.return_value.value = copied_page
     return page
+
+
+def get_cards(page: MagicMock) -> MagicMock:
+    return page.locator.return_value.filter.return_value
 
 
 def get_card(page: MagicMock) -> MagicMock:
@@ -121,6 +126,27 @@ def test_copy_note_raises_lookup_error_when_copied_document_does_not_open() -> N
 
     with pytest.raises(LookupError):
         copy_note_to_google_docs(page, '人間関係')
+
+
+def test_copy_note_raises_lookup_error_when_several_memos_match() -> None:
+    # タイトルと同じ行を本文に持つメモが混ざると対象を取り違えるため進めない
+    page = build_page()
+    get_cards(page).count.return_value = 2
+
+    with pytest.raises(LookupError):
+        copy_note_to_google_docs(page, '人間関係')
+
+    get_card(page).hover.assert_not_called()
+
+
+def test_clear_note_body_raises_lookup_error_when_several_memos_match() -> None:
+    page = build_page()
+    get_cards(page).count.return_value = 2
+
+    with pytest.raises(LookupError):
+        clear_note_body(page, '人間関係')
+
+    get_card(page).click.assert_not_called()
 
 
 def test_copy_note_raises_connection_error_when_redirected_to_login() -> None:
