@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+[1.0.2] 2026-09-04
+
 ### 修正
 - タイトルと同じ行を本文に持つ別のメモを誤って対象にする可能性があった問題を修正。`_find_note_card()` が複数のメモに一致した場合は `MSG_MEMO_AMBIGUOUS` で失敗するようにした（誤ったメモの本文削除を防ぐ）
 
@@ -22,7 +24,7 @@
 - `setup_logging()` / `cleanup_old_logs()` の `except Exception` による握り潰しと再送出を削除（例外の型と原因チェーンが失われていたため）
 - 未使用の `config_manager.get_config_path()` と `sys.frozen` / `sys._MEIPASS` 分岐を削除（PyInstaller 化しておらず、`_MEIPASS` は編集対象の `config.ini` の置き場所として成立しないため）
 
-## [1.0.1] 2026-09-01
+[1.0.1] 2026-09-01
 
 ### 修正
 - `run.bat`（`pythonw.exe`）起動時にログが1行も残らない問題を修正。`sys.stdout` が `None` の場合はコンソールハンドラを追加しないようにした
